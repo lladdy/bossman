@@ -17,11 +17,13 @@ def fix_p(p):
 
 
 class BossMan:
-    def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4):
+    def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4,
+                 autosave=True):
         self.global_decision_history: dict = {}
         self.match_decision_history: dict = {}
         self.file = file
         self.rounding_precision = rounding_precision
+        self.autosave = autosave
 
         if create_file_on_missing and not os.path.isfile(file):
             with open(file, 'w') as f:
@@ -80,7 +82,7 @@ class BossMan:
         if choice_made not in self.match_decision_history[decision_name]:
             self.match_decision_history[decision_name].append(choice_made)
 
-    def register_result(self, win: bool, save_to_file: bool=True):
+    def report_result(self, win: bool, save_to_file: bool=None):
         """
         Registers the outcome of the current match.
         """
@@ -89,8 +91,13 @@ class BossMan:
                 for choice_made in self.match_decision_history[decision_name]:
                     self.global_decision_history[decision_name][choice_made]['won_count'] += 1
 
-        if save_to_file:
+        if save_to_file is not None:  # override autosave behaviour
+            if save_to_file:
+                self._save_state_to_file()
+            # else don't save (do nothing)
+        elif self.autosave:
             self._save_state_to_file()
+
 
     def _save_state_to_file(self, file_override: str = None):
         """

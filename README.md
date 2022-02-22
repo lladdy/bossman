@@ -15,24 +15,29 @@ Here it is used for selecting strategies at the start of the match.
 
 
 # Example Usage:
+
 ```python
-
 available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
+
 boss_man = BossMan(file='optional/path/to/file.json')  # default file path is ./data/bossman.json
+
 selected_build = boss_man.decide(f'build', available_builds)
-... # later, after the match is done
-boss_man.register_result(True) # automaticaly saved to file here
 
+...  # later, after the match is done
 
-
+boss_man.report_result(True)  # automaticaly saved to file here
 ```
 
 
 # Extra Options
 
-### Don't automatically save file
-Usually when you register a result, all data is automatically saved to file.  
-To avoid this, you can provide the `save_to_file` parameter like so:
-```
-boss_man.register_result(True, save_to_file=False)
+### Control automatic file saving
+Usually when you report a result, all data is automatically saved to file.  
+To avoid this, you can either pass `autosave` as `False` when you create BossMan, or provide the `save_to_file` parameter when reporting the result.
+```python
+boss_man = BossMan(autosave=False)  # Disable autosave permanently
+
+# Alternatively, both these will override the autosave setting
+boss_man.report_result(True, save_to_file=False)
+boss_man.report_result(True, save_to_file=True)
 ```
