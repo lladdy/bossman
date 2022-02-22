@@ -33,7 +33,7 @@ class BossMan:
             self.global_decision_history: dict = json.load(f)
             # TODO: sanity check wins aren't more than times chosen
 
-    def decide(self, decision_name, options) -> (str, float):
+    def decide(self, options, scope: str='Default') -> (str, float):
         """
         Makes a decision between choices, taking into account match history.
 
@@ -43,15 +43,15 @@ class BossMan:
         # Retrieve percentage win for each option from
         chosen_count: list = []
         won_count: list = []
-        if decision_name in self.global_decision_history:
+        if scope in self.global_decision_history:
 
             # Intialize missing values
             for option in options:
-                if option not in self.global_decision_history[decision_name]:
-                    self.global_decision_history[decision_name][option] = {'chosen_count': 0, 'won_count': 0}
+                if option not in self.global_decision_history[scope]:
+                    self.global_decision_history[scope][option] = {'chosen_count': 0, 'won_count': 0}
 
             # Prepare data for call to probabilities calc
-            for key, decision in self.global_decision_history[decision_name].items():
+            for key, decision in self.global_decision_history[scope].items():
                 # # omit missing historical options
                 if key in options:
                     won_count.append(decision['won_count'])
@@ -59,20 +59,20 @@ class BossMan:
 
         else:
             # Intialize missing values
-            self.global_decision_history[decision_name] = {}
+            self.global_decision_history[scope] = {}
             for option in options:
-                self.global_decision_history[decision_name][option] = {'chosen_count': 0, 'won_count': 0}
+                self.global_decision_history[scope][option] = {'chosen_count': 0, 'won_count': 0}
                 won_count.append(0)
                 chosen_count.append(0)
 
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
         choice = np.random.choice(options, p=fix_p(p))
 
-        if choice not in self.global_decision_history[decision_name]:
-            self.global_decision_history[decision_name][choice] = {'chosen_count': 0, 'won_count': 0}
+        if choice not in self.global_decision_history[scope]:
+            self.global_decision_history[scope][choice] = {'chosen_count': 0, 'won_count': 0}
 
-        self.global_decision_history[decision_name][choice]['chosen_count'] += 1
-        self._record_match_decision(decision_name, choice)
+        self.global_decision_history[scope][choice]['chosen_count'] += 1
+        self._record_match_decision(scope, choice)
         return choice, p[options.index(choice)]
 
     def _record_match_decision(self, decision_name, choice_made):
