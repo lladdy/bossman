@@ -8,7 +8,7 @@ Let the BossMan decide.
 
 BossMan is a simple library made for SC2 AI bot development that will help select from a list of choices for you.
 
-BossMan tracks choice history and prioritizes choices that experience high win rates. It also prioritizes choices it hasn't used much before.
+BossMan tracks choice history and prioritizes choices that experience high win rates. It also prioritizes choices it hasn't used much yet.
 
 BossMan is currently used in the SC2 bot [Chance](https://github.com/lladdy/chance-sc2), which plays on
 the [SC2 AI Arena Ladder](https://aiarena.net/bots/117/)  
