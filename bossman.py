@@ -115,8 +115,7 @@ class BossMan:
         """
         Determines the weighted probabilities for each choice.
         """
-        win_perc = np.divide(chosen_count, won_count, out=np.zeros_like(chosen_count, dtype=float),
-                             where=won_count != 0)
+        win_perc = self._calc_win_perc(chosen_count, won_count)
 
         """
         mod: The higher this value, the quicker the weight fall off as chosen_count climbs
@@ -154,8 +153,44 @@ class BossMan:
 
         return scaled_probs
 
+    def _calc_win_perc(self, chosen_count, won_count):
+        return np.divide(won_count, chosen_count, out=np.zeros_like(won_count, dtype=float), where=won_count != 0)
+
     def _round_probabilities_sum(self, probabilities: np.array) -> np.array:
         probabilities = floor(probabilities, self.rounding_precision)
         round_amount = 1.0 - np.sum(probabilities)
         probabilities[0] += round_amount  # chuck it on the first one
         return probabilities
+
+    def calc_analytics(self) -> dict:
+        analytics = {}
+        for scope_name, choices in self.global_decision_history.items():
+            analytics[scope_name] = {}
+            analytics[scope_name]['times_considered'] = 0
+            analytics[scope_name]['choices'] = {}
+            for choice_name, choice in choices.items():
+                analytics[scope_name]['times_considered'] += choice['chosen_count']
+
+                analytics[scope_name]['choices'][choice_name] = {}
+                analytics[scope_name]['choices'][choice_name]['win_perc'] = np.asscalar(
+                    self._calc_win_perc(choice['chosen_count'],
+                                        choice['won_count']))
+                analytics[scope_name]['choices'][choice_name]['chosen_count'] = choice['chosen_count']
+                analytics[scope_name]['choices'][choice_name]['won_count'] = choice['won_count']
+
+        # sort
+        analytics = dict(reversed(sorted(analytics.items(), key=lambda item: item[1]['times_considered'])))
+        for scope_name, values in analytics.items():
+            values['choices'] = dict(reversed(sorted(values['choices'].items(), key=lambda item: (item[1]['win_perc'], -item[1]['chosen_count']))))
+
+        return analytics
+
+
+    def print_analytics(self):
+        analytics = self.calc_analytics()
+        for scope_name, values in analytics.items():
+            choices = values['choices']
+            print(f'{scope_name} - {values["times_considered"]} times considered')
+
+            for name, value in values['choices'].items():
+                print(f'{value} {name}')
