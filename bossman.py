@@ -189,7 +189,6 @@ class BossMan:
     def print_analytics(self):
         analytics = self.calc_analytics()
         for scope_name, values in analytics.items():
-            choices = values['choices']
             print(f'{scope_name} - {values["times_considered"]} times considered')
 
             for name, value in values['choices'].items():
