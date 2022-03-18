@@ -191,5 +191,8 @@ class BossMan:
         for scope_name, values in analytics.items():
             print(f'{scope_name} - {values["times_considered"]} times considered')
 
-            for name, value in values['choices'].items():
-                print(f'{value} {name}')
+            for choice in values['choices']:
+                print(f"{choice:<30} "
+                      f"Win %: {values['choices'][choice]['win_perc']:.2f} "
+                      f"Chosen: {values['choices'][choice]['chosen_count']:>3} "
+                      f"Won: {values['choices'][choice]['won_count']:>3}")
