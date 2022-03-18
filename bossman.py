@@ -19,6 +19,7 @@ def fix_p(p):
 class BossMan:
     def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4,
                  autosave=True):
+        self.save_file_cache: dict = {'global_decision_history':{},'match_decision_histories':[],}
         self.global_decision_history: dict = {}
         self.match_decision_history: dict = {}
         self.file = file
@@ -27,11 +28,12 @@ class BossMan:
 
         if create_file_on_missing and not os.path.isfile(file):
             with open(file, 'w') as f:
-                json.dump(self.global_decision_history, f)
+                json.dump(self.save_file_cache, f)
 
         with open(file) as f:
-            self.global_decision_history: dict = json.load(f)
+            self.save_file_cache: dict = json.load(f)
             # TODO: sanity check wins aren't more than times chosen
+        self.global_decision_history = self.save_file_cache['global_decision_history']
 
     def decide(self, options, scope: str='Default') -> (str, float):
         """
@@ -98,7 +100,6 @@ class BossMan:
         elif self.autosave:
             self._save_state_to_file()
 
-
     def _save_state_to_file(self, file_override: str = None):
         """
         Saves the current state to file.
@@ -108,8 +109,10 @@ class BossMan:
         if file_override is not None:
             file_to_use = file_override
 
+        self.save_file_cache['global_decision_history'] = self.global_decision_history
+        self.save_file_cache['match_decision_histories'].append(self.match_decision_history)
         with open(file_to_use, 'w') as f:
-            json.dump(self.global_decision_history, f)
+            json.dump(self.save_file_cache, f)
 
     def _calc_choice_probabilities(self, chosen_count: np.array, won_count: np.array) -> np.array:
         """

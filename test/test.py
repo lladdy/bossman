@@ -1,13 +1,14 @@
+import json
 import os
 from typing import List
 
 from bossman import BossMan
 
-EMPTY_JSON_FILE_SIZE = 2  # 2 for the JSON brackets
 
-
-def is_empty_json_file(file: str):
-    return os.path.getsize(file) == EMPTY_JSON_FILE_SIZE
+def is_empty_save_file(file: str):
+    with open(file) as f:
+        file_contents: dict = json.load(f)
+    return len(file_contents['global_decision_history']) == 0 and len(file_contents['match_decision_histories']) == 0
 
 
 def test_standard_usage():
@@ -25,10 +26,10 @@ def test_autosave_on():
     boss_man.decide(['FourRax', "FiveRax"], scope='build')
     boss_man.report_result(True, save_to_file=False)
 
-    assert is_empty_json_file(file)
+    assert is_empty_save_file(file)
 
     boss_man.report_result(True)
-    assert not is_empty_json_file(file)
+    assert not is_empty_save_file(file)
 
 
 def test_autosave_off():
@@ -40,10 +41,10 @@ def test_autosave_off():
     boss_man.decide(['FourRax', "FiveRax"], scope='build')
 
     boss_man.report_result(True)
-    assert is_empty_json_file(file)
+    assert is_empty_save_file(file)
 
     boss_man.report_result(True, save_to_file=True)
-    assert not is_empty_json_file(file)
+    assert not is_empty_save_file(file)
 
 
 def ladder_crash_scenario(filename: str, scopes: str, options: List[str], result: bool = True,
