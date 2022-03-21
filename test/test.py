@@ -3,7 +3,7 @@ import os
 from typing import List
 
 from bossman import BossMan
-from utl import deep_dict_insert, deep_dict_read
+from utl import insert_decision_context, read_decision_context
 
 
 def is_empty_save_file(file: str):
@@ -16,6 +16,16 @@ def test_standard_usage():
     boss_man = BossMan()
     boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
     boss_man.report_result(True, save_to_file=False)
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.report_result(False, save_to_file=False)
+
+
+def test_context_usage():
+    boss_man = BossMan()
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.report_result(True, save_to_file=False)
+    boss_man.decide(['FourRax', "FiveRax", "SixRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.report_result(False, save_to_file=False)
 
 
 def test_context_sorting():
@@ -24,9 +34,9 @@ def test_context_sorting():
 
 def test_deep_dict_insert():
     dict = {}
-    dict = deep_dict_insert(dict, ['key1', 'key2', 'key3'], 'value')
+    dict = insert_decision_context(dict, ['key1', 'key2', 'key3'], 'value')
     assert dict == {'key1': {'key2': {'key3': 'value'}}}
-    assert deep_dict_read(dict, ['key1', 'key2', 'key3']) == 'value'
+    assert read_decision_context(dict, ['key1', 'key2', 'key3']) == 'value'
 
 
 def test_autosave_on():

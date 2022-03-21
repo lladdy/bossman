@@ -4,13 +4,13 @@ import os
 import numpy as np
 from scipy.special import expit
 
-from utl import fix_p, floor
+from utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
 
 
 class BossMan:
     def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4,
                  autosave=True):
-        self.save_file_cache: dict = {'decision_stats':{},'decision_history':[],}
+        self.save_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
         self.decision_stats: dict = {}
         self.decision_history: dict = {}
         self.file = file
@@ -26,25 +26,30 @@ class BossMan:
             # TODO: sanity check wins aren't more than times chosen
         self.decision_stats = self.save_file_cache['decision_stats']
 
-    def decide(self, options, decision_type: str) -> (str, float):
+    def decide(self, options, decision_type: str, **context) -> (str, float):
         """
         Makes a decision between choices, taking into account match history.
 
         TODO: allow for decision scopes where the caller can register things like their opponent/race/etc in the decision
         TODO: have decisions with a similar (but not the same) set of scopes influence other decisions.
         """
+        context = dict(sorted(context.items()))  # keep a consistent key order
+
         # Retrieve percentage win for each option from
         chosen_count: list = []
         won_count: list = []
+
         if decision_type in self.decision_stats:
+            populate_missing_decision_context_keys(self.decision_stats[decision_type], context)
+            decision_context = read_decision_context(self.decision_stats[decision_type], context)
 
             # Intialize missing values
             for option in options:
-                if option not in self.decision_stats[decision_type]:
-                    self.decision_stats[decision_type][option] = {'chosen_count': 0, 'won_count': 0}
+                if option not in decision_context:
+                    decision_context[option] = {'chosen_count': 0, 'won_count': 0}
 
             # Prepare data for call to probabilities calc
-            for key, decision in self.decision_stats[decision_type].items():
+            for key, decision in decision_context.items():
                 # # omit missing historical options
                 if key in options:
                     won_count.append(decision['won_count'])
@@ -53,10 +58,16 @@ class BossMan:
         else:
             # Intialize missing values
             self.decision_stats[decision_type] = {}
+
+            option_stats = {}
             for option in options:
-                self.decision_stats[decision_type][option] = {'chosen_count': 0, 'won_count': 0}
+                option_stats[option] = {'chosen_count': 0, 'won_count': 0}
                 won_count.append(0)
                 chosen_count.append(0)
+
+            insert_decision_context(self.decision_stats[decision_type],
+                                    context,
+                                    option_stats)
 
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
         choice = np.random.choice(options, p=fix_p(p))
@@ -75,7 +86,7 @@ class BossMan:
         if choice_made not in self.decision_history[decision_name]:
             self.decision_history[decision_name].append(choice_made)
 
-    def report_result(self, win: bool, save_to_file: bool=None):
+    def report_result(self, win: bool, save_to_file: bool = None):
         """
         Registers the outcome of the current match.
         """
@@ -175,10 +186,10 @@ class BossMan:
         # sort
         analytics = dict(reversed(sorted(analytics.items(), key=lambda item: item[1]['times_considered'])))
         for scope_name, values in analytics.items():
-            values['choices'] = dict(reversed(sorted(values['choices'].items(), key=lambda item: (item[1]['win_perc'], -item[1]['chosen_count']))))
+            values['choices'] = dict(reversed(
+                sorted(values['choices'].items(), key=lambda item: (item[1]['win_perc'], -item[1]['chosen_count']))))
 
         return analytics
-
 
     def print_analytics(self):
         analytics = self.calc_analytics()

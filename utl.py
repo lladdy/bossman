@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 
 
@@ -14,39 +12,49 @@ def fix_p(p):
     return p
 
 
-def deep_dict_read(source_dict, keys: List) -> dict:
+def read_decision_context(source_dict, context: dict):
     """
     Reads a value from a variably deep nested entry in a dictionary.
     Inspired by https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
     """
-    assert len(keys) > 0
+    if len(context) == 0:  # no context
+        return source_dict
 
-    current_key = keys[0]
-    del keys[0]  # remove the current key
+    key, val = list(context.items())[0]
 
-    if len(keys) > 0:  # there are more keys
-        return deep_dict_read(source_dict[current_key], keys)
+    if len(context) > 1:  # there are more keys
+        new_context = dict(context)
+        del new_context[key]
+        return read_decision_context(source_dict[key][val], new_context)
     else:
-        return source_dict[current_key]
+        return source_dict[key][val]
 
 
-def deep_dict_insert(source_dict, keys: List, value) -> dict:
+def populate_missing_decision_context_keys(source_dict, context: dict) -> dict:
+    return insert_decision_context(source_dict, context)
+
+
+def insert_decision_context(source_dict, context: dict, value=None):
     """
-    Updates a variably deep nested entry in a dictionary.
-    If the keys don't exist, they are created in the order listed.
+    Inserts a value into a variably deep nested entry in a dictionary, creating all required keys along the way.
     Inspired by https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+
+    Call with value=None to simply populate context keys.
     """
-    assert len(keys) > 0
+    if len(context) == 0:  # no context
+        return source_dict
 
-    current_key = keys[0]
-    del keys[0]  # remove the current key
+    key, val = list(context.items())[0]
 
-    if current_key not in source_dict:
-        source_dict[current_key] = {}
+    if key not in source_dict:
+        source_dict[key] = {}
 
-    if len(keys) > 0:  # there are more keys
-        source_dict[current_key] = deep_dict_insert(source_dict[current_key], keys, value)
+    if val not in source_dict[key]:
+        source_dict[key][val] = {}
+
+    if len(context) > 1:  # there are more keys
+        new_context = dict(context)
+        del new_context[key]
+        insert_decision_context(source_dict[key][val], new_context, value)
     else:
-        source_dict[current_key] = value
-
-    return source_dict
+        source_dict[key][val] = value or source_dict[key][val]
