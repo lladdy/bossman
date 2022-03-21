@@ -3,18 +3,40 @@ import os
 from typing import List
 
 from bossman import BossMan
+from utl import insert_decision_context, read_decision_context
 
 
 def is_empty_save_file(file: str):
     with open(file) as f:
         file_contents: dict = json.load(f)
-    return len(file_contents['global_decision_history']) == 0 and len(file_contents['match_decision_histories']) == 0
+    return len(file_contents['decision_stats']) == 0 and len(file_contents['decision_history']) == 0
 
 
 def test_standard_usage():
     boss_man = BossMan()
-    boss_man.decide(['FourRax', "FiveRax"], scope='build')
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
     boss_man.report_result(True, save_to_file=False)
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.report_result(False, save_to_file=False)
+
+
+def test_context_usage():
+    boss_man = BossMan()
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.report_result(True, save_to_file=False)
+    boss_man.decide(['FourRax', "FiveRax", "SixRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.report_result(False, save_to_file=False)
+
+
+def test_context_sorting():
+    pass  # todo: check the context key sorting works
+
+
+def test_deep_dict_insert():
+    dict = {}
+    dict = insert_decision_context(dict, ['key1', 'key2', 'key3'], 'value')
+    assert dict == {'key1': {'key2': {'key3': 'value'}}}
+    assert read_decision_context(dict, ['key1', 'key2', 'key3']) == 'value'
 
 
 def test_autosave_on():
@@ -23,7 +45,7 @@ def test_autosave_on():
         os.remove(file)
 
     boss_man = BossMan(file=file, autosave=True)
-    boss_man.decide(['FourRax', "FiveRax"], scope='build')
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
     boss_man.report_result(True, save_to_file=False)
 
     assert is_empty_save_file(file)
@@ -38,7 +60,7 @@ def test_autosave_off():
         os.remove(file)
 
     boss_man = BossMan(file=file, autosave=False)
-    boss_man.decide(['FourRax', "FiveRax"], scope='build')
+    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
 
     boss_man.report_result(True)
     assert is_empty_save_file(file)
@@ -46,11 +68,13 @@ def test_autosave_off():
     boss_man.report_result(True, save_to_file=True)
     assert not is_empty_save_file(file)
 
+def test_keyword_clash():
+    pass  # todo: check choices keyword clash avoidance
 
 def ladder_crash_scenario(filename: str, scopes: str, options: List[str], result: bool = True,
                           save_to_file: bool = False):
     boss_man = BossMan(file=filename)
-    boss_man.decide(options, scope=scopes)
+    boss_man.decide(options, decision_type=scopes)
     boss_man.report_result(result, save_to_file=save_to_file)
 
 
@@ -74,6 +98,23 @@ def analytics():
 test_standard_usage()
 test_autosave_on()
 test_autosave_off()
+test_keyword_clash()
 ladder_crash_scenario_1()
 omit_missing_historial_options()
 analytics()
+
+def convert_cache(file_name):
+    with open(file_name) as f:
+        save_file_cache: dict = json.load(f)
+    new_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
+    for key, val in save_file_cache['global_decision_history'].items():
+        strings = key.split('_')
+        type = strings[0]
+        context = {'opponent_id': strings[1], 'my_race': strings[2], }
+        if type not in new_file_cache['decision_stats']:
+            new_file_cache['decision_stats'][type] = {}
+        insert_decision_context(new_file_cache['decision_stats'][type], context, val)
+    with open('e_' + file_name, 'w') as f:
+        json.dump(new_file_cache, f)
+
+# convert_cache('analytics.json')
