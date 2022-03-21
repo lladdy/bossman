@@ -23,7 +23,7 @@ available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan(file='optional/path/to/file.json')  # default file path is ./data/bossman.json
 
-selected_build = boss_man.decide(f'build', available_builds)
+selected_build = boss_man.decide('strategy', available_builds)  # 'strategy' is the decision type
 
 ...  # later, after the match is done
 
@@ -35,11 +35,12 @@ boss_man.report_result(True)  # automaticaly saved to file here
 Each scope's history is tracked separately.
 
 ```python
+opponent_id = '12345'
 available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan()
 
-selected_build = boss_man.decide(available_builds, decision_type=opponent_id)  # decides build based on opponent id
+selected_build = boss_man.decide('build', available_builds, opponent_id=opponent_id)  # takes the opponent id into context
 ```
 
 # Extra Options
