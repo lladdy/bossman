@@ -102,3 +102,18 @@ test_keyword_clash()
 ladder_crash_scenario_1()
 omit_missing_historial_options()
 analytics()
+
+def convert_cache(file_name):
+    with open(file_name) as f:
+        save_file_cache: dict = json.load(f)
+    new_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
+    for key, val in save_file_cache['decision_stats'].items():
+        strings = key.split('_')
+        type = strings[0]
+        context = {'opponent_id': strings[1], 'my_race': strings[2], }
+        new_file_cache['decision_stats'][type] = {}
+        insert_decision_context(new_file_cache['decision_stats'][type], context, val)
+    with open('e_' + file_name, 'w') as f:
+        json.dump(new_file_cache, f)
+
+# convert_cache('analytics.json')

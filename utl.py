@@ -61,6 +61,6 @@ def insert_decision_context(source_dict: dict, context: dict, value=None):
         del new_context[key]
         insert_decision_context(source_dict[key][val], new_context, value)
     else:
-        if 'choices' not in source_dict:
-            source_dict['choices'] = {}
-        source_dict['choices'][key][val] = value or source_dict['choices'][key][val]
+        if 'choices' not in source_dict[key][val]:
+            source_dict[key][val]['choices'] = {}
+        source_dict[key][val]['choices'] = value or source_dict[key][val]['choices']

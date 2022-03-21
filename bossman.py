@@ -179,13 +179,18 @@ class BossMan:
         probabilities[0] += round_amount  # chuck it on the first one
         return probabilities
 
-    def calc_analytics(self) -> dict:
-        analytics = {}
-        for scope_name, choices in self.decision_stats.items():
+    def _extract_decision_keys(self, decision_type:str, analytics:dict, decision_data, context: list=None):
+
+        if context is None:
+            context = []
+
+
+        if 'choices' in decision_data:
+            scope_name = '_'.join([decision_type]+context)
             analytics[scope_name] = {}
             analytics[scope_name]['times_considered'] = 0
             analytics[scope_name]['choices'] = {}
-            for choice_name, choice in choices.items():
+            for choice_name, choice in decision_data['choices'].items():
                 analytics[scope_name]['times_considered'] += choice['chosen_count']
 
                 analytics[scope_name]['choices'][choice_name] = {}
@@ -195,9 +200,22 @@ class BossMan:
                 analytics[scope_name]['choices'][choice_name]['chosen_count'] = choice['chosen_count']
                 analytics[scope_name]['choices'][choice_name]['won_count'] = choice['won_count']
 
+            del decision_data['choices']
+
+        for context_id, context_id_value in decision_data.items():
+            for context_value, context_value_data in context_id_value.items():
+                context.append(context_value)
+                self._extract_decision_keys(decision_type, analytics, context_value_data, context)
+
+    def calc_analytics(self) -> dict:
+        analytics = {}
+
+        for decision_type in self.decision_stats.keys():
+            self._extract_decision_keys(decision_type, analytics, self.decision_stats[decision_type])
+
         # sort
         analytics = dict(reversed(sorted(analytics.items(), key=lambda item: item[1]['times_considered'])))
-        for scope_name, values in analytics.items():
+        for decision_type, values in analytics.items():
             values['choices'] = dict(reversed(
                 sorted(values['choices'].items(), key=lambda item: (item[1]['win_perc'], -item[1]['chosen_count']))))
 
