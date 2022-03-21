@@ -23,7 +23,9 @@ available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan(file='optional/path/to/file.json')  # default file path is ./data/bossman.json
 
-selected_build = boss_man.decide('strategy', available_builds)  # 'strategy' is the decision type
+# Here 'strategy' is the decision type.
+# Decision types keep different decisions seperate, so they don't interfere with each other.
+selected_build = boss_man.decide('strategy', available_builds)
 
 ...  # later, after the match is done
 
@@ -40,7 +42,8 @@ available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan()
 
-selected_build = boss_man.decide('build', available_builds, opponent_id=opponent_id)  # takes the opponent id into context
+# Now take the opponent id into consideration
+selected_build = boss_man.decide('strategy', available_builds, opponent_id=opponent_id)
 ```
 
 # Extra Options
