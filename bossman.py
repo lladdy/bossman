@@ -12,7 +12,8 @@ class BossMan:
                  autosave=True):
         self.save_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
         self.decision_stats: dict = {}
-        self.decision_history: dict = {}
+        self.decision_history: list = []
+        self.match_decision_history: dict = {"decisions": []}
         self.file = file
         self.rounding_precision = rounding_precision
         self.autosave = autosave
@@ -75,25 +76,32 @@ class BossMan:
         if choice not in self.decision_stats[decision_type]:
             self.decision_stats[decision_type][choice] = {'chosen_count': 0, 'won_count': 0}
 
-        self.decision_stats[decision_type][choice]['chosen_count'] += 1
-        self._record_match_decision(decision_type, choice)
+        decision_context = read_decision_context(self.decision_stats[decision_type], context)
+        decision_context[choice]['chosen_count'] += 1
+        self._record_match_decision(decision_type, context, options, choice)
         return choice, p[options.index(choice)]
 
-    def _record_match_decision(self, decision_name, choice_made):
-        if decision_name not in self.decision_history:
-            self.decision_history[decision_name] = []
-
-        if choice_made not in self.decision_history[decision_name]:
-            self.decision_history[decision_name].append(choice_made)
+    def _record_match_decision(self, decision_type, context, options, choice):
+        self.match_decision_history['decisions'].append({
+            "type": decision_type,
+            "context": context,
+            "options": [
+                "FourRax",
+                "FiveRax"
+            ],
+            "choice": choice
+        })
 
     def report_result(self, win: bool, save_to_file: bool = None):
         """
         Registers the outcome of the current match.
         """
         if win:
-            for decision_name in self.decision_history:
-                for choice_made in self.decision_history[decision_name]:
-                    self.decision_stats[decision_name][choice_made]['won_count'] += 1
+            self.match_decision_history['outcome'] = 1
+
+            for decision in self.match_decision_history['decisions']:
+                decision_context = read_decision_context(self.decision_stats[decision['type']], decision['context'])
+                decision_context[decision['choice']]['won_count'] += 1
 
         if save_to_file is not None:  # override autosave behaviour
             if save_to_file:
