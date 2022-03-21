@@ -4,7 +4,7 @@ import os
 import numpy as np
 from scipy.special import expit
 
-from utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
+from .utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
 
 
 class BossMan:
