@@ -33,6 +33,9 @@ class BossMan:
         TODO: allow for decision scopes where the caller can register things like their opponent/race/etc in the decision
         TODO: have decisions with a similar (but not the same) set of scopes influence other decisions.
         """
+        if 'choices' in context:  # we reserve this keyword
+            raise "You cannot use 'choices' as part of your context - it is a reserved keyword."
+
         context = dict(sorted(context.items()))  # keep a consistent key order
 
         # Retrieve percentage win for each option from
@@ -41,7 +44,12 @@ class BossMan:
 
         if decision_type in self.decision_stats:
             populate_missing_decision_context_keys(self.decision_stats[decision_type], context)
-            decision_context = read_decision_context(self.decision_stats[decision_type], context)
+            tmp_decision_context = read_decision_context(self.decision_stats[decision_type], context)
+
+            if 'choices' not in tmp_decision_context:
+                tmp_decision_context['choices'] = {}
+
+            decision_context = tmp_decision_context['choices']
 
             # Intialize missing values
             for option in options:
@@ -73,7 +81,7 @@ class BossMan:
         choice = np.random.choice(options, p=fix_p(p))
 
         decision_context = read_decision_context(self.decision_stats[decision_type], context)
-        decision_context[choice]['chosen_count'] += 1
+        decision_context['choices'][choice]['chosen_count'] += 1
         self._record_match_decision(decision_type, context, options, choice)
         return choice, p[options.index(choice)]
 
@@ -94,7 +102,7 @@ class BossMan:
 
             for decision in self.match_decision_history['decisions']:
                 decision_context = read_decision_context(self.decision_stats[decision['type']], decision['context'])
-                decision_context[decision['choice']]['won_count'] += 1
+                decision_context['choices'][decision['choice']]['won_count'] += 1
 
         if save_to_file is not None:  # override autosave behaviour
             if save_to_file:

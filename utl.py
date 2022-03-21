@@ -30,11 +30,11 @@ def read_decision_context(source_dict, context: dict):
         return source_dict[key][val]
 
 
-def populate_missing_decision_context_keys(source_dict, context: dict) -> dict:
-    return insert_decision_context(source_dict, context)
+def populate_missing_decision_context_keys(source_dict, context: dict):
+    insert_decision_context(source_dict, context)
 
 
-def insert_decision_context(source_dict, context: dict, value=None):
+def insert_decision_context(source_dict: dict, context: dict, value=None):
     """
     Inserts a value into a variably deep nested entry in a dictionary, creating all required keys along the way.
     Inspired by https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -42,7 +42,11 @@ def insert_decision_context(source_dict, context: dict, value=None):
     Call with value=None to simply populate context keys.
     """
     if len(context) == 0:  # no context
-        return source_dict
+        if value is not None:  # if there's a value, update the root dict
+            if 'choices' not in source_dict:
+                source_dict['choices'] = {}
+            source_dict['choices'].update(value)
+        return
 
     key, val = list(context.items())[0]
 
@@ -57,4 +61,6 @@ def insert_decision_context(source_dict, context: dict, value=None):
         del new_context[key]
         insert_decision_context(source_dict[key][val], new_context, value)
     else:
-        source_dict[key][val] = value or source_dict[key][val]
+        if 'choices' not in source_dict:
+            source_dict['choices'] = {}
+        source_dict['choices'][key][val] = value or source_dict['choices'][key][val]
