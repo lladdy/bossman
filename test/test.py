@@ -9,7 +9,7 @@ from utl import insert_decision_context, read_decision_context
 def is_empty_save_file(file: str):
     with open(file) as f:
         file_contents: dict = json.load(f)
-    return len(file_contents['global_decision_history']) == 0 and len(file_contents['match_decision_histories']) == 0
+    return len(file_contents['decision_stats']) == 0 and len(file_contents['decision_history']) == 0
 
 
 def test_standard_usage():
@@ -68,6 +68,8 @@ def test_autosave_off():
     boss_man.report_result(True, save_to_file=True)
     assert not is_empty_save_file(file)
 
+def test_keyword_clash():
+    pass  # todo: check choices keyword clash avoidance
 
 def ladder_crash_scenario(filename: str, scopes: str, options: List[str], result: bool = True,
                           save_to_file: bool = False):
@@ -96,6 +98,7 @@ def analytics():
 test_standard_usage()
 test_autosave_on()
 test_autosave_off()
+test_keyword_clash()
 ladder_crash_scenario_1()
 omit_missing_historial_options()
 analytics()
