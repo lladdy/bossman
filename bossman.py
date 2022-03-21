@@ -19,9 +19,9 @@ def fix_p(p):
 class BossMan:
     def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4,
                  autosave=True):
-        self.save_file_cache: dict = {'global_decision_history':{},'match_decision_histories':[],}
-        self.global_decision_history: dict = {}
-        self.match_decision_history: dict = {}
+        self.save_file_cache: dict = {'decision_stats':{},'decision_history':[],}
+        self.decision_stats: dict = {}
+        self.decision_history: dict = {}
         self.file = file
         self.rounding_precision = rounding_precision
         self.autosave = autosave
@@ -33,7 +33,7 @@ class BossMan:
         with open(file) as f:
             self.save_file_cache: dict = json.load(f)
             # TODO: sanity check wins aren't more than times chosen
-        self.global_decision_history = self.save_file_cache['global_decision_history']
+        self.decision_stats = self.save_file_cache['decision_stats']
 
     def decide(self, options, scope: str='Default') -> (str, float):
         """
@@ -45,15 +45,15 @@ class BossMan:
         # Retrieve percentage win for each option from
         chosen_count: list = []
         won_count: list = []
-        if scope in self.global_decision_history:
+        if scope in self.decision_stats:
 
             # Intialize missing values
             for option in options:
-                if option not in self.global_decision_history[scope]:
-                    self.global_decision_history[scope][option] = {'chosen_count': 0, 'won_count': 0}
+                if option not in self.decision_stats[scope]:
+                    self.decision_stats[scope][option] = {'chosen_count': 0, 'won_count': 0}
 
             # Prepare data for call to probabilities calc
-            for key, decision in self.global_decision_history[scope].items():
+            for key, decision in self.decision_stats[scope].items():
                 # # omit missing historical options
                 if key in options:
                     won_count.append(decision['won_count'])
@@ -61,37 +61,37 @@ class BossMan:
 
         else:
             # Intialize missing values
-            self.global_decision_history[scope] = {}
+            self.decision_stats[scope] = {}
             for option in options:
-                self.global_decision_history[scope][option] = {'chosen_count': 0, 'won_count': 0}
+                self.decision_stats[scope][option] = {'chosen_count': 0, 'won_count': 0}
                 won_count.append(0)
                 chosen_count.append(0)
 
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
         choice = np.random.choice(options, p=fix_p(p))
 
-        if choice not in self.global_decision_history[scope]:
-            self.global_decision_history[scope][choice] = {'chosen_count': 0, 'won_count': 0}
+        if choice not in self.decision_stats[scope]:
+            self.decision_stats[scope][choice] = {'chosen_count': 0, 'won_count': 0}
 
-        self.global_decision_history[scope][choice]['chosen_count'] += 1
+        self.decision_stats[scope][choice]['chosen_count'] += 1
         self._record_match_decision(scope, choice)
         return choice, p[options.index(choice)]
 
     def _record_match_decision(self, decision_name, choice_made):
-        if decision_name not in self.match_decision_history:
-            self.match_decision_history[decision_name] = []
+        if decision_name not in self.decision_history:
+            self.decision_history[decision_name] = []
 
-        if choice_made not in self.match_decision_history[decision_name]:
-            self.match_decision_history[decision_name].append(choice_made)
+        if choice_made not in self.decision_history[decision_name]:
+            self.decision_history[decision_name].append(choice_made)
 
     def report_result(self, win: bool, save_to_file: bool=None):
         """
         Registers the outcome of the current match.
         """
         if win:
-            for decision_name in self.match_decision_history:
-                for choice_made in self.match_decision_history[decision_name]:
-                    self.global_decision_history[decision_name][choice_made]['won_count'] += 1
+            for decision_name in self.decision_history:
+                for choice_made in self.decision_history[decision_name]:
+                    self.decision_stats[decision_name][choice_made]['won_count'] += 1
 
         if save_to_file is not None:  # override autosave behaviour
             if save_to_file:
@@ -109,8 +109,8 @@ class BossMan:
         if file_override is not None:
             file_to_use = file_override
 
-        self.save_file_cache['global_decision_history'] = self.global_decision_history
-        self.save_file_cache['match_decision_histories'].append(self.match_decision_history)
+        self.save_file_cache['decision_stats'] = self.decision_stats
+        self.save_file_cache['decision_history'].append(self.decision_history)
         with open(file_to_use, 'w') as f:
             json.dump(self.save_file_cache, f)
 
@@ -167,7 +167,7 @@ class BossMan:
 
     def calc_analytics(self) -> dict:
         analytics = {}
-        for scope_name, choices in self.global_decision_history.items():
+        for scope_name, choices in self.decision_stats.items():
             analytics[scope_name] = {}
             analytics[scope_name]['times_considered'] = 0
             analytics[scope_name]['choices'] = {}
