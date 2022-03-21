@@ -2,8 +2,8 @@ import json
 import os
 from typing import List
 
-from bossman import BossMan
-from utl import insert_decision_context, read_decision_context
+from bossman.bossman import BossMan
+from bossman.utl import insert_decision_context, read_decision_context
 
 
 def is_empty_save_file(file: str):

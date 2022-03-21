@@ -4,7 +4,7 @@ import os
 import numpy as np
 from scipy.special import expit
 
-from .utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
+from bossman.utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
 
 
 class BossMan:
@@ -26,7 +26,7 @@ class BossMan:
             # TODO: sanity check wins aren't more than times chosen
         self.decision_stats = self.save_file_cache['decision_stats']
 
-    def decide(self, options, decision_type: str, **context) -> (str, float):
+    def decide(self, decision_type, options, **context) -> (str, float):
         """
         Makes a decision between choices, taking into account match history.
 
