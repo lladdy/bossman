@@ -204,8 +204,9 @@ class BossMan:
 
         for context_id, context_id_value in decision_data.items():
             for context_value, context_value_data in context_id_value.items():
-                context.append(context_value)
-                self._extract_decision_keys(decision_type, analytics, context_value_data, context)
+                new_context = list(context)
+                new_context.append(context_value)
+                self._extract_decision_keys(decision_type, analytics, context_value_data, list(new_context))
 
     def calc_analytics(self) -> dict:
         analytics = {}
