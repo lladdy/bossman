@@ -26,7 +26,7 @@ class BossMan:
             # TODO: sanity check wins aren't more than times chosen
         self.decision_stats = self.save_file_cache['decision_stats']
 
-    def decide(self, options, scope: str='Default') -> (str, float):
+    def decide(self, options, decision_type: str) -> (str, float):
         """
         Makes a decision between choices, taking into account match history.
 
@@ -36,15 +36,15 @@ class BossMan:
         # Retrieve percentage win for each option from
         chosen_count: list = []
         won_count: list = []
-        if scope in self.decision_stats:
+        if decision_type in self.decision_stats:
 
             # Intialize missing values
             for option in options:
-                if option not in self.decision_stats[scope]:
-                    self.decision_stats[scope][option] = {'chosen_count': 0, 'won_count': 0}
+                if option not in self.decision_stats[decision_type]:
+                    self.decision_stats[decision_type][option] = {'chosen_count': 0, 'won_count': 0}
 
             # Prepare data for call to probabilities calc
-            for key, decision in self.decision_stats[scope].items():
+            for key, decision in self.decision_stats[decision_type].items():
                 # # omit missing historical options
                 if key in options:
                     won_count.append(decision['won_count'])
@@ -52,20 +52,20 @@ class BossMan:
 
         else:
             # Intialize missing values
-            self.decision_stats[scope] = {}
+            self.decision_stats[decision_type] = {}
             for option in options:
-                self.decision_stats[scope][option] = {'chosen_count': 0, 'won_count': 0}
+                self.decision_stats[decision_type][option] = {'chosen_count': 0, 'won_count': 0}
                 won_count.append(0)
                 chosen_count.append(0)
 
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
         choice = np.random.choice(options, p=fix_p(p))
 
-        if choice not in self.decision_stats[scope]:
-            self.decision_stats[scope][choice] = {'chosen_count': 0, 'won_count': 0}
+        if choice not in self.decision_stats[decision_type]:
+            self.decision_stats[decision_type][choice] = {'chosen_count': 0, 'won_count': 0}
 
-        self.decision_stats[scope][choice]['chosen_count'] += 1
-        self._record_match_decision(scope, choice)
+        self.decision_stats[decision_type][choice]['chosen_count'] += 1
+        self._record_match_decision(decision_type, choice)
         return choice, p[options.index(choice)]
 
     def _record_match_decision(self, decision_name, choice_made):

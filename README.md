@@ -39,7 +39,7 @@ available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan()
 
-selected_build = boss_man.decide(available_builds, scope=opponent_id)  # decides build based on opponent id
+selected_build = boss_man.decide(available_builds, decision_type=opponent_id)  # decides build based on opponent id
 ```
 
 # Extra Options
