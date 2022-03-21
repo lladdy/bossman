@@ -4,16 +4,7 @@ import os
 import numpy as np
 from scipy.special import expit
 
-
-def floor(array: np.array, precision=0):
-    # https://stackoverflow.com/questions/58065055/floor-and-ceil-with-number-of-decimals
-    return np.true_divide(np.floor(array * 10 ** precision), 10 ** precision)
-
-
-def fix_p(p):
-    if p.sum() != 1.0:
-        p = p * (1. / p.sum())
-    return p
+from utl import fix_p, floor
 
 
 class BossMan:
