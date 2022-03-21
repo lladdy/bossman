@@ -12,7 +12,6 @@ class BossMan:
                  autosave=True):
         self.save_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
         self.decision_stats: dict = {}
-        self.decision_history: list = []
         self.match_decision_history: dict = {"decisions": []}
         self.file = file
         self.rounding_precision = rounding_precision
@@ -73,9 +72,6 @@ class BossMan:
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
         choice = np.random.choice(options, p=fix_p(p))
 
-        if choice not in self.decision_stats[decision_type]:
-            self.decision_stats[decision_type][choice] = {'chosen_count': 0, 'won_count': 0}
-
         decision_context = read_decision_context(self.decision_stats[decision_type], context)
         decision_context[choice]['chosen_count'] += 1
         self._record_match_decision(decision_type, context, options, choice)
@@ -85,14 +81,11 @@ class BossMan:
         self.match_decision_history['decisions'].append({
             "type": decision_type,
             "context": context,
-            "options": [
-                "FourRax",
-                "FiveRax"
-            ],
+            "options": options,
             "choice": choice
         })
 
-    def report_result(self, win: bool, save_to_file: bool = None):
+    def report_result(self, win: bool, save_to_file: bool = None, purge_match_decision_history: bool = True):
         """
         Registers the outcome of the current match.
         """
@@ -105,12 +98,12 @@ class BossMan:
 
         if save_to_file is not None:  # override autosave behaviour
             if save_to_file:
-                self._save_state_to_file()
+                self._save_state_to_file(purge_match_decision_history=purge_match_decision_history)
             # else don't save (do nothing)
         elif self.autosave:
-            self._save_state_to_file()
+            self._save_state_to_file(purge_match_decision_history=purge_match_decision_history)
 
-    def _save_state_to_file(self, file_override: str = None):
+    def _save_state_to_file(self, file_override: str = None, purge_match_decision_history: bool = True):
         """
         Saves the current state to file.
         """
@@ -120,9 +113,12 @@ class BossMan:
             file_to_use = file_override
 
         self.save_file_cache['decision_stats'] = self.decision_stats
-        self.save_file_cache['decision_history'].append(self.decision_history)
+        self.save_file_cache['decision_history'].append(self.match_decision_history)
         with open(file_to_use, 'w') as f:
             json.dump(self.save_file_cache, f)
+
+        if purge_match_decision_history:
+            self.match_decision_history = {"decisions": []}
 
     def _calc_choice_probabilities(self, chosen_count: np.array, won_count: np.array) -> np.array:
         """
