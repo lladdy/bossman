@@ -14,17 +14,17 @@ def is_empty_save_file(file: str):
 
 def test_standard_usage():
     boss_man = BossMan()
-    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.decide('build', ['FourRax', "FiveRax"])
     boss_man.report_result(True, save_to_file=False)
-    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.decide('build', ['FourRax', "FiveRax"])
     boss_man.report_result(False, save_to_file=False)
 
 
 def test_context_usage():
     boss_man = BossMan()
-    boss_man.decide(['FourRax', "FiveRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.decide('build', ['FourRax', "FiveRax"], my_race='Zerg', opponent_id='123')
     boss_man.report_result(True, save_to_file=False)
-    boss_man.decide(['FourRax', "FiveRax", "SixRax"], decision_type='build', my_race='Zerg', opponent_id='123')
+    boss_man.decide('build', ['FourRax', "FiveRax", "SixRax"], my_race='Zerg', opponent_id='123')
     boss_man.report_result(False, save_to_file=False)
 
 
@@ -34,9 +34,9 @@ def test_context_sorting():
 
 def test_deep_dict_insert():
     dict = {}
-    dict = insert_decision_context(dict, ['key1', 'key2', 'key3'], 'value')
+    dict = insert_decision_context(dict, {'key1': 'value1', 'key2': 'value2', 'key3': 'value3'}, 'value')
     assert dict == {'key1': {'key2': {'key3': 'value'}}}
-    assert read_decision_context(dict, ['key1', 'key2', 'key3']) == 'value'
+    assert read_decision_context(dict, {'key1': 'value1', 'key2': 'value2', 'key3': 'value3'}) == 'value'
 
 
 def test_autosave_on():
@@ -45,7 +45,7 @@ def test_autosave_on():
         os.remove(file)
 
     boss_man = BossMan(file=file, autosave=True)
-    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.decide('build', ['FourRax', "FiveRax"])
     boss_man.report_result(True, save_to_file=False)
 
     assert is_empty_save_file(file)
@@ -60,7 +60,7 @@ def test_autosave_off():
         os.remove(file)
 
     boss_man = BossMan(file=file, autosave=False)
-    boss_man.decide(['FourRax', "FiveRax"], decision_type='build')
+    boss_man.decide('build', ['FourRax', "FiveRax"])
 
     boss_man.report_result(True)
     assert is_empty_save_file(file)
@@ -71,10 +71,10 @@ def test_autosave_off():
 def test_keyword_clash():
     pass  # todo: check choices keyword clash avoidance
 
-def ladder_crash_scenario(filename: str, scopes: str, options: List[str], result: bool = True,
+def ladder_crash_scenario(filename: str, type: str, options: List[str], result: bool = True,
                           save_to_file: bool = False):
     boss_man = BossMan(file=filename)
-    boss_man.decide(options, decision_type=scopes)
+    boss_man.decide(type, options)
     boss_man.report_result(result, save_to_file=save_to_file)
 
 

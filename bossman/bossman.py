@@ -4,7 +4,8 @@ import os
 import numpy as np
 from scipy.special import expit
 
-from bossman.utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, read_decision_context
+from bossman.utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, \
+    read_decision_context, ensure_file_dir_exists, save_json_to_file
 
 
 class BossMan:
@@ -18,8 +19,7 @@ class BossMan:
         self.autosave = autosave
 
         if create_file_on_missing and not os.path.isfile(file):
-            with open(file, 'w') as f:
-                json.dump(self.save_file_cache, f)
+            save_json_to_file(file, self.save_file_cache)
 
         with open(file) as f:
             self.save_file_cache: dict = json.load(f)
@@ -122,8 +122,8 @@ class BossMan:
 
         self.save_file_cache['decision_stats'] = self.decision_stats
         self.save_file_cache['decision_history'].append(self.match_decision_history)
-        with open(file_to_use, 'w') as f:
-            json.dump(self.save_file_cache, f)
+
+        save_json_to_file(file_to_use, self.save_file_cache)
 
         if purge_match_decision_history:
             self.match_decision_history = {"decisions": []}
