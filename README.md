@@ -32,9 +32,10 @@ selected_build = boss_man.decide('strategy', available_builds)
 boss_man.report_result(True)  # automaticaly saved to file here
 ```
 
-### Multiple scopes
+### Using context
 
-Each scope's history is tracked separately.
+You can add context to each decision, by including each context item as a named argument.  
+Each context item will be taken into account for decisions, and tracked in the choice history.  
 
 ```python
 opponent_id = '12345'
@@ -42,9 +43,11 @@ available_builds = ['FourRax', '2BaseTankPush', 'BansheeHarass']
 
 boss_man = BossMan()
 
-# Now take the opponent id into consideration
-selected_build = boss_man.decide('strategy', available_builds, opponent_id=opponent_id)
+# Add the opponent to the decision context.
+selected_build = boss_man.decide('strategy', available_builds, opponent=opponent_id)
 ```
+
+Note that, contextual arguments should be used sparingly (especially if each context has many variations), as they can significantly increase the time it takes for BossMan to learn. I recommend 1-3 context arguments at most. 
 
 # Extra Options
 
