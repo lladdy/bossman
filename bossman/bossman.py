@@ -134,15 +134,9 @@ class BossMan:
         """
         win_perc = self._calc_win_perc(chosen_count, won_count)
 
-        """
-        mod: The higher this value, the quicker the weight fall off as chosen_count climbs
-        """
-        mod = 1.0
-        # calculate a weight that will make low sample size choices more likely
-        probability_weight = 1 - (expit(chosen_count * mod) - 0.5) * 2
-
+        total_games = chosen_count.sum()
         # Apply that weight to each choice's win percentage
-        weighted_probabilities = win_perc + probability_weight
+        weighted_probabilities = self._calc_ucb(win_perc, chosen_count, total_games)
 
         # Scale probabilities back down so they sum to 1.0 again.
         prob_sum = np.sum(weighted_probabilities)
@@ -172,6 +166,12 @@ class BossMan:
 
     def _calc_win_perc(self, chosen_count, won_count):
         return np.divide(won_count, chosen_count, out=np.zeros_like(won_count, dtype=float), where=won_count != 0)
+
+    def _calc_ucb(self, win_perc, chosen_count, total_games):
+        if total_games > 0:
+            return win_perc + 0.7 * np.log(chosen_count, out=np.ones_like(chosen_count, dtype=float) * total_games,
+                                           where=chosen_count != 0) / total_games
+        return np.ones_like(chosen_count, dtype=float)
 
     def _round_probabilities_sum(self, probabilities: np.array) -> np.array:
         probabilities = floor(probabilities, self.rounding_precision)
