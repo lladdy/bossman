@@ -23,7 +23,7 @@ class BossMan:
         rounding_precision: int = 4,
         autosave=True,
         legacy=False,
-        exploit_constant=1.4,
+        explore_constant=1.4,
         random_distribution=True,
     ):
         self.save_file_cache: dict = {
@@ -36,7 +36,7 @@ class BossMan:
         self.rounding_precision = rounding_precision
         self.autosave = autosave
         self.legacy = legacy
-        self.exploit_constant = exploit_constant
+        self.explore_constant = explore_constant
         self.random_distribution = random_distribution
 
         if create_file_on_missing and not os.path.isfile(file):
@@ -241,7 +241,7 @@ class BossMan:
     # UCB1 = win percentage + C * sqrt(ln(total_games) / visits)
     def _calc_ucb(self, win_perc, chosen_count, total_games):
         if total_games > 0:
-            return win_perc + self.exploit_constant * np.sqrt(
+            return win_perc + self.explore_constant * np.sqrt(
                 math.log(total_games + 1) / chosen_count,
                 out=np.ones_like(chosen_count, dtype=float) * 1e100,
                 where=chosen_count != 0,
