@@ -5,7 +5,7 @@ import numpy as np
 from scipy.special import expit
 
 from bossman.utl import fix_p, floor, insert_decision_context, populate_missing_decision_context_keys, \
-    read_decision_context, ensure_file_dir_exists, save_json_to_file
+    read_decision_context, save_json_to_file
 
 
 class BossMan:
@@ -182,10 +182,14 @@ class BossMan:
         else:
             return self._calc_ucb(win_perc, chosen_count, total_games)
 
+    # Based on https://www.chessprogramming.org/UCT
+    # Upper confidence bound:
+    # UCB1 = win percentage + C * sqrt(ln(visits) / total_games)
     def _calc_ucb(self, win_perc, chosen_count, total_games):
         if total_games > 0:
-            return win_perc + 0.7 * np.log(chosen_count, out=np.ones_like(chosen_count, dtype=float) * total_games,
-                                           where=chosen_count != 0) / total_games
+            return win_perc + 1.3 * np.sqrt(
+                np.log(chosen_count, out=np.ones_like(chosen_count, dtype=float) * total_games,
+                       where=chosen_count != 0) / total_games)
         return np.ones_like(chosen_count, dtype=float)
 
     def _round_probabilities_sum(self, probabilities: np.array) -> np.array:
