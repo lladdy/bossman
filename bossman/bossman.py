@@ -137,7 +137,7 @@ class BossMan:
 
         total_games = chosen_count.sum()
         # Apply that weight to each choice's win percentage
-        weighted_probabilities = self._calc_ucb(win_perc, chosen_count, total_games)
+        weighted_probabilities = self._calc_weighted_probability(win_perc, chosen_count, total_games)
 
         # Scale probabilities back down so they sum to 1.0 again.
         prob_sum = np.sum(weighted_probabilities)
