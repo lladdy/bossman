@@ -10,13 +10,14 @@ from bossman.utl import fix_p, floor, insert_decision_context, populate_missing_
 
 class BossMan:
     def __init__(self, file='./data/bossman.json', create_file_on_missing=True, rounding_precision: int = 4,
-                 autosave=True):
+                 autosave=True, legacy=False):
         self.save_file_cache: dict = {'decision_stats': {}, 'decision_history': [], }
         self.decision_stats: dict = {}
         self.match_decision_history: dict = {"decisions": []}
         self.file = file
         self.rounding_precision = rounding_precision
         self.autosave = autosave
+        self.legacy = legacy
 
         if create_file_on_missing and not os.path.isfile(file):
             save_json_to_file(file, self.save_file_cache)
@@ -166,6 +167,20 @@ class BossMan:
 
     def _calc_win_perc(self, chosen_count, won_count):
         return np.divide(won_count, chosen_count, out=np.zeros_like(won_count, dtype=float), where=won_count != 0)
+
+    def _calc_weighted_probability(self, win_perc, chosen_count, total_games):
+        if self.legacy:
+            """
+            mod: The higher this value, the quicker the weight fall off as chosen_count climbs
+            """
+            mod = 1.0
+            # calculate a weight that will make low sample size choices more likely
+            probability_weight = 1 - (expit(chosen_count * mod) - 0.5) * 2
+
+            # Apply that weight to each choice's win percentage
+            return win_perc + probability_weight
+        else:
+            return self._calc_ucb(win_perc, chosen_count, total_games)
 
     def _calc_ucb(self, win_perc, chosen_count, total_games):
         if total_games > 0:
