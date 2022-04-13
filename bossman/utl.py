@@ -20,10 +20,12 @@ def ensure_file_dir_exists(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+
 def save_json_to_file(file, content):
     ensure_file_dir_exists(file)
     with open(file, 'w') as f:
         json.dump(content, f)
+
 
 def read_decision_context(source_dict, context: dict):
     """

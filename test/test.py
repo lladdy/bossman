@@ -68,8 +68,10 @@ def test_autosave_off():
     boss_man.report_result(True, save_to_file=True)
     assert not is_empty_save_file(file)
 
+
 def test_keyword_clash():
     pass  # todo: check choices keyword clash avoidance
+
 
 def ladder_crash_scenario(filename: str, type: str, options: List[str], result: bool = True,
                           save_to_file: bool = False):
@@ -102,6 +104,7 @@ test_keyword_clash()
 ladder_crash_scenario_1()
 omit_missing_historial_options()
 analytics()
+
 
 def convert_cache(file_name):
     with open(file_name) as f:
