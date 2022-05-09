@@ -2,6 +2,7 @@ import json
 import os
 from typing import List
 
+from bossman.backend import JsonBackend
 from bossman.bossman import BossMan
 from bossman.utl import insert_decision_context, read_decision_context
 
@@ -44,7 +45,7 @@ def test_autosave_on():
     if os.path.isfile(file):
         os.remove(file)
 
-    boss_man = BossMan(file=file, autosave=True)
+    boss_man = BossMan(backend=JsonBackend(file=file), autosave=True)
     boss_man.decide('build', ['FourRax', "FiveRax"])
     boss_man.report_result(True, save_to_file=False)
 
@@ -59,7 +60,7 @@ def test_autosave_off():
     if os.path.isfile(file):
         os.remove(file)
 
-    boss_man = BossMan(file=file, autosave=False)
+    boss_man = BossMan(backend=JsonBackend(file=file), autosave=False)
     boss_man.decide('build', ['FourRax', "FiveRax"])
 
     boss_man.report_result(True)
@@ -75,7 +76,7 @@ def test_keyword_clash():
 
 def ladder_crash_scenario(filename: str, type: str, options: List[str], result: bool = True,
                           save_to_file: bool = False):
-    boss_man = BossMan(file=filename)
+    boss_man = BossMan(backend=JsonBackend(file=filename))
     boss_man.decide(type, options)
     boss_man.report_result(result, save_to_file=save_to_file)
 
@@ -93,7 +94,7 @@ def omit_missing_historial_options():
 
 
 def analytics():
-    boss_man = BossMan(file='analytics.json', autosave=False)
+    boss_man = BossMan(backend=JsonBackend(file='analytics.json'), autosave=False)
     boss_man.print_analytics()
 
 

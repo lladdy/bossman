@@ -1,51 +1,37 @@
-import json
 import math
-import os
+from typing import Union
 
 import numpy as np
 from scipy.special import expit
 
+from bossman.backend import BackendType, Backend, BackendFactory
 from bossman.utl import (
     fix_p,
     floor,
     insert_decision_context,
     populate_missing_decision_context_keys,
     read_decision_context,
-    save_json_to_file,
 )
 
 
 class BossMan:
     def __init__(
-        self,
-        file="./data/bossman.json",
-        create_file_on_missing=True,
-        rounding_precision: int = 4,
-        autosave=True,
-        legacy=False,
-        explore_constant=1.4,
-        random_distribution=True,
+            self,
+            rounding_precision: int = 4,
+            autosave=True,
+            legacy=False,
+            explore_constant=1.4,
+            random_distribution=True,
+            backend: Union[BackendType, Backend] = BackendType.JSON,
     ):
-        self.save_file_cache: dict = {
-            "decision_stats": {},
-            "decision_history": [],
-        }
-        self.decision_stats: dict = {}
         self.match_decision_history: dict = {"decisions": []}
-        self.file = file
         self.rounding_precision = rounding_precision
         self.autosave = autosave
         self.legacy = legacy
         self.explore_constant = explore_constant
         self.random_distribution = random_distribution
-
-        if create_file_on_missing and not os.path.isfile(file):
-            save_json_to_file(file, self.save_file_cache)
-
-        with open(file) as f:
-            self.save_file_cache: dict = json.load(f)
-            # TODO: sanity check wins aren't more than times chosen
-        self.decision_stats = self.save_file_cache["decision_stats"]
+        self.backend = BackendFactory.construct(backend)
+        self.decision_stats = self.backend.load_decision_stats()
 
     def decide(self, decision_type, options, **context) -> (str, float):
         """
@@ -127,10 +113,10 @@ class BossMan:
         )
 
     def report_result(
-        self,
-        win: bool,
-        save_to_file: bool = None,
-        purge_match_decision_history: bool = True,
+            self,
+            win: bool,
+            save_to_file: bool = None,
+            purge_match_decision_history: bool = True,
     ):
         """
         Registers the outcome of the current match.
@@ -146,36 +132,16 @@ class BossMan:
 
         if save_to_file is not None:  # override autosave behaviour
             if save_to_file:
-                self._save_state_to_file(
-                    purge_match_decision_history=purge_match_decision_history
-                )
+                self.backend.save(self.decision_stats, self.match_decision_history)
             # else don't save (do nothing)
         elif self.autosave:
-            self._save_state_to_file(
-                purge_match_decision_history=purge_match_decision_history
-            )
-
-    def _save_state_to_file(
-        self, file_override: str = None, purge_match_decision_history: bool = True
-    ):
-        """
-        Saves the current state to file.
-        """
-
-        file_to_use = self.file
-        if file_override is not None:
-            file_to_use = file_override
-
-        self.save_file_cache["decision_stats"] = self.decision_stats
-        self.save_file_cache["decision_history"].append(self.match_decision_history)
-
-        save_json_to_file(file_to_use, self.save_file_cache)
+            self.backend.save(self.decision_stats, self.match_decision_history)
 
         if purge_match_decision_history:
             self.match_decision_history = {"decisions": []}
 
     def _calc_choice_probabilities(
-        self, chosen_count: np.array, won_count: np.array
+            self, chosen_count: np.array, won_count: np.array
     ) -> np.array:
         """
         Determines the weighted probabilities for each choice.
@@ -255,7 +221,7 @@ class BossMan:
         return probabilities
 
     def _extract_decision_keys(
-        self, decision_type: str, analytics: dict, decision_data, context: list = None
+            self, decision_type: str, analytics: dict, decision_data, context: list = None
     ):
 
         if context is None:
