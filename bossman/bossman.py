@@ -1,9 +1,8 @@
-import math
 from typing import Union
 
 import numpy as np
-from scipy.special import expit
 
+from bossman.algorithm.weighted_success_rate import WeightedSuccessRate
 from bossman.backend import BackendType, Backend, BackendFactory
 from bossman.utl import (
     fix_p,
@@ -16,22 +15,22 @@ from bossman.utl import (
 
 class BossMan:
     def __init__(
-        self,
-        rounding_precision: int = 4,
-        autosave=True,
-        legacy=False,
-        explore_constant=1.4,
-        random_distribution=True,
-        backend: Union[BackendType, Backend] = BackendType.JSON,
+            self,
+            rounding_precision: int = 4,
+            autosave=True,
+            legacy=False,
+            random_distribution=True,
+            backend: Union[BackendType, Backend] = BackendType.JSON,
+            success_probability_algorithm=WeightedSuccessRate(),
     ):
         self.match_decision_history: dict = {"decisions": []}
         self.rounding_precision = rounding_precision
         self.autosave = autosave
         self.legacy = legacy
-        self.explore_constant = explore_constant
         self.random_distribution = random_distribution
         self.backend = BackendFactory.construct(backend)
         self.decision_stats = self.backend.load_decision_stats()
+        self.success_probability_algorithm = success_probability_algorithm
 
     def decide(self, decision_type, options, **context) -> (str, float):
         """
@@ -139,7 +138,7 @@ class BossMan:
 
         total_games = chosen_count.sum()
         # Apply that weight to each choice's win percentage
-        weighted_probabilities = self._calc_weighted_probability(win_perc, chosen_count, total_games)
+        weighted_probabilities = self.success_probability_algorithm.calc(win_perc, chosen_count)
 
         # Scale probabilities back down so they sum to 1.0 again.
         prob_sum = np.sum(weighted_probabilities)
@@ -174,32 +173,6 @@ class BossMan:
             out=np.zeros_like(won_count, dtype=float),
             where=won_count != 0,
         )
-
-    def _calc_weighted_probability(self, win_perc, chosen_count, total_games):
-        if self.legacy:
-            """
-            mod: The higher this value, the quicker the weight fall off as chosen_count climbs
-            """
-            mod = 1.0
-            # calculate a weight that will make low sample size choices more likely
-            probability_weight = 1 - (expit(chosen_count * mod) - 0.5) * 2
-
-            # Apply that weight to each choice's win percentage
-            return win_perc + probability_weight
-        else:
-            return self._calc_ucb(win_perc, chosen_count, total_games)
-
-    # Based on https://www.chessprogramming.org/UCT
-    # Upper confidence bound:
-    # UCB1 = win percentage + C * sqrt(ln(total_games) / visits)
-    def _calc_ucb(self, win_perc, chosen_count, total_games):
-        if total_games > 0:
-            return win_perc + self.explore_constant * np.sqrt(
-                math.log(total_games + 1) / chosen_count,
-                out=np.ones_like(chosen_count, dtype=float) * 1e100,
-                where=chosen_count != 0,
-            )
-        return np.ones_like(chosen_count, dtype=float)
 
     def _round_probabilities_sum(self, probabilities: np.array) -> np.array:
         probabilities = floor(probabilities, self.rounding_precision)
