@@ -16,13 +16,13 @@ from bossman.utl import (
 
 class BossMan:
     def __init__(
-            self,
-            rounding_precision: int = 4,
-            autosave=True,
-            legacy=False,
-            explore_constant=1.4,
-            random_distribution=True,
-            backend: Union[BackendType, Backend] = BackendType.JSON,
+        self,
+        rounding_precision: int = 4,
+        autosave=True,
+        legacy=False,
+        explore_constant=1.4,
+        random_distribution=True,
+        backend: Union[BackendType, Backend] = BackendType.JSON,
     ):
         self.match_decision_history: dict = {"decisions": []}
         self.rounding_precision = rounding_precision
@@ -37,7 +37,8 @@ class BossMan:
         """
         Makes a decision between choices, taking into account match history.
 
-        TODO: allow for decision scopes where the caller can register things like their opponent/race/etc in the decision
+        TODO: allow for decision scopes where the caller can register things
+        TODO: like their opponent/race/etc in the decision
         TODO: have decisions with a similar (but not the same) set of scopes influence other decisions.
         """
         if "choices" in context:  # we reserve this keyword
@@ -50,12 +51,8 @@ class BossMan:
         won_count: list = []
 
         if decision_type in self.decision_stats:
-            populate_missing_decision_context_keys(
-                self.decision_stats[decision_type], context
-            )
-            tmp_decision_context = read_decision_context(
-                self.decision_stats[decision_type], context
-            )
+            populate_missing_decision_context_keys(self.decision_stats[decision_type], context)
+            tmp_decision_context = read_decision_context(self.decision_stats[decision_type], context)
 
             if "choices" not in tmp_decision_context:
                 tmp_decision_context["choices"] = {}
@@ -84,9 +81,7 @@ class BossMan:
                 won_count.append(0)
                 chosen_count.append(0)
 
-            insert_decision_context(
-                self.decision_stats[decision_type], context, option_stats
-            )
+            insert_decision_context(self.decision_stats[decision_type], context, option_stats)
 
         p = self._calc_choice_probabilities(np.array(chosen_count), np.array(won_count))
 
@@ -95,9 +90,7 @@ class BossMan:
         else:
             choice = options[np.argmax(p)]
 
-        decision_context = read_decision_context(
-            self.decision_stats[decision_type], context
-        )
+        decision_context = read_decision_context(self.decision_stats[decision_type], context)
         decision_context["choices"][choice]["chosen_count"] += 1
         self._record_match_decision(decision_type, context, options, choice)
         return choice, p[options.index(choice)]
@@ -113,10 +106,10 @@ class BossMan:
         )
 
     def report_result(
-            self,
-            win: bool,
-            save_to_file: bool = None,
-            purge_match_decision_history: bool = True,
+        self,
+        win: bool,
+        save_to_file: bool = None,
+        purge_match_decision_history: bool = True,
     ):
         """
         Registers the outcome of the current match.
@@ -125,9 +118,7 @@ class BossMan:
             self.match_decision_history["outcome"] = 1
 
             for decision in self.match_decision_history["decisions"]:
-                decision_context = read_decision_context(
-                    self.decision_stats[decision["type"]], decision["context"]
-                )
+                decision_context = read_decision_context(self.decision_stats[decision["type"]], decision["context"])
                 decision_context["choices"][decision["choice"]]["won_count"] += 1
 
         if save_to_file is not None:  # override autosave behaviour
@@ -140,9 +131,7 @@ class BossMan:
         if purge_match_decision_history:
             self.match_decision_history = {"decisions": []}
 
-    def _calc_choice_probabilities(
-            self, chosen_count: np.array, won_count: np.array
-    ) -> np.array:
+    def _calc_choice_probabilities(self, chosen_count: np.array, won_count: np.array) -> np.array:
         """
         Determines the weighted probabilities for each choice.
         """
@@ -150,9 +139,7 @@ class BossMan:
 
         total_games = chosen_count.sum()
         # Apply that weight to each choice's win percentage
-        weighted_probabilities = self._calc_weighted_probability(
-            win_perc, chosen_count, total_games
-        )
+        weighted_probabilities = self._calc_weighted_probability(win_perc, chosen_count, total_games)
 
         # Scale probabilities back down so they sum to 1.0 again.
         prob_sum = np.sum(weighted_probabilities)
@@ -220,10 +207,7 @@ class BossMan:
         probabilities[0] += round_amount  # chuck it on the first one
         return probabilities
 
-    def _extract_decision_keys(
-            self, decision_type: str, analytics: dict, decision_data, context: list = None
-    ):
-
+    def _extract_decision_keys(self, decision_type: str, analytics: dict, decision_data, context: list = None):
         if context is None:
             context = []
 
@@ -239,12 +223,8 @@ class BossMan:
                 analytics[scope_name]["choices"][choice_name]["win_perc"] = np.asscalar(
                     self._calc_win_perc(choice["chosen_count"], choice["won_count"])
                 )
-                analytics[scope_name]["choices"][choice_name]["chosen_count"] = choice[
-                    "chosen_count"
-                ]
-                analytics[scope_name]["choices"][choice_name]["won_count"] = choice[
-                    "won_count"
-                ]
+                analytics[scope_name]["choices"][choice_name]["chosen_count"] = choice["chosen_count"]
+                analytics[scope_name]["choices"][choice_name]["won_count"] = choice["won_count"]
 
             del decision_data["choices"]
 
@@ -252,24 +232,16 @@ class BossMan:
             for context_value, context_value_data in context_id_value.items():
                 new_context = list(context)
                 new_context.append(context_value)
-                self._extract_decision_keys(
-                    decision_type, analytics, context_value_data, list(new_context)
-                )
+                self._extract_decision_keys(decision_type, analytics, context_value_data, list(new_context))
 
     def calc_analytics(self) -> dict:
         analytics = {}
 
         for decision_type in self.decision_stats.keys():
-            self._extract_decision_keys(
-                decision_type, analytics, self.decision_stats[decision_type]
-            )
+            self._extract_decision_keys(decision_type, analytics, self.decision_stats[decision_type])
 
         # sort
-        analytics = dict(
-            reversed(
-                sorted(analytics.items(), key=lambda item: item[1]["times_considered"])
-            )
-        )
+        analytics = dict(reversed(sorted(analytics.items(), key=lambda item: item[1]["times_considered"])))
         for decision_type, values in analytics.items():
             values["choices"] = dict(
                 reversed(

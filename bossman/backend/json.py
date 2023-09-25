@@ -6,10 +6,11 @@ from bossman.utl import save_json_to_file
 
 
 class JsonBackend(Backend):
-
-    def __init__(self, file="./data/bossman.json",
-                 create_file_on_missing=True,
-                 ):
+    def __init__(
+        self,
+        file="./data/bossman.json",
+        create_file_on_missing=True,
+    ):
         self.file = file
 
         self.save_file_cache: dict = {

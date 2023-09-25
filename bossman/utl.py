@@ -6,12 +6,12 @@ import numpy as np
 
 def floor(array: np.array, precision=0):
     # https://stackoverflow.com/questions/58065055/floor-and-ceil-with-number-of-decimals
-    return np.true_divide(np.floor(array * 10 ** precision), 10 ** precision)
+    return np.true_divide(np.floor(array * 10**precision), 10**precision)
 
 
 def fix_p(p):
     if p.sum() != 1.0:
-        p = p * (1. / p.sum())
+        p = p * (1.0 / p.sum())
     return p
 
 
@@ -23,7 +23,7 @@ def ensure_file_dir_exists(file_path):
 
 def save_json_to_file(file, content):
     ensure_file_dir_exists(file)
-    with open(file, 'w') as f:
+    with open(file, "w") as f:
         json.dump(content, f)
 
 
@@ -58,9 +58,9 @@ def insert_decision_context(source_dict: dict, context: dict, value=None):
     """
     if len(context) == 0:  # no context
         if value is not None:  # if there's a value, update the root dict
-            if 'choices' not in source_dict:
-                source_dict['choices'] = {}
-            source_dict['choices'].update(value)
+            if "choices" not in source_dict:
+                source_dict["choices"] = {}
+            source_dict["choices"].update(value)
         return
 
     key, val = list(context.items())[0]
@@ -76,6 +76,6 @@ def insert_decision_context(source_dict: dict, context: dict, value=None):
         del new_context[key]
         insert_decision_context(source_dict[key][val], new_context, value)
     else:
-        if 'choices' not in source_dict[key][val]:
-            source_dict[key][val]['choices'] = {}
-        source_dict[key][val]['choices'] = value or source_dict[key][val]['choices']
+        if "choices" not in source_dict[key][val]:
+            source_dict[key][val]["choices"] = {}
+        source_dict[key][val]["choices"] = value or source_dict[key][val]["choices"]

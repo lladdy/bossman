@@ -11,10 +11,10 @@ class BackendFactory:
         if type == BackendType.JSON:
             return JsonBackend()
         else:
-            raise f'Unrecognized backend type specified: {type}'
+            raise f"Unrecognized backend type specified: {type}"
 
     @staticmethod
-    def construct(backend: Union[BackendType, 'Backend']) -> 'Backend':
+    def construct(backend: Union[BackendType, "Backend"]) -> "Backend":
         if isinstance(backend, BackendType):
             return BackendFactory.create_backend(backend)
         else:
