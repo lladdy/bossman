@@ -1,3 +1,4 @@
 -r requirements.txt
 pre-commit==3.3.3
 ruff==0.0.264
+black==23.7.0
