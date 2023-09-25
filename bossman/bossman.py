@@ -15,13 +15,13 @@ from bossman.utl import (
 
 class BossMan:
     def __init__(
-            self,
-            rounding_precision: int = 4,
-            autosave=True,
-            legacy=False,
-            random_distribution=True,
-            backend: Union[BackendType, Backend] = BackendType.JSON,
-            success_probability_algorithm=WeightedSuccessRate(),
+        self,
+        rounding_precision: int = 4,
+        autosave=True,
+        legacy=False,
+        random_distribution=True,
+        backend: Union[BackendType, Backend] = BackendType.JSON,
+        success_probability_algorithm=WeightedSuccessRate(),
     ):
         self.match_decision_history: dict = {"decisions": []}
         self.rounding_precision = rounding_precision
@@ -136,7 +136,6 @@ class BossMan:
         """
         win_perc = self._calc_win_perc(chosen_count, won_count)
 
-        total_games = chosen_count.sum()
         # Apply that weight to each choice's win percentage
         weighted_probabilities = self.success_probability_algorithm.calc(win_perc, chosen_count)
 

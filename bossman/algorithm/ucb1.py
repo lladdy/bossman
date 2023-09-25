@@ -24,4 +24,3 @@ class UCB1(BaseSuccessProbabilityAlgorithm):
                 where=(chosen_count != 0),
             )
         return np.ones_like(chosen_count, dtype=float)
-
